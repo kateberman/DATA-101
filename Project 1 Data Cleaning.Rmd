@@ -1,0 +1,124 @@
+---
+title: "Data 101 Project - Data Cleaning"
+author: "Kate Berman"
+date: "9/24/2018"
+output: html_document
+---
+
+###Begin Project 1:
+
+
+Load packages and read in the data file
+
+```{r} 
+library("dplyr")
+
+setwd("~/DATA-101/Project 1")
+ 
+  wdir<- getwd()
+  
+  dfilename <- paste(wdir, "/", "Salaries.csv", sep = "")
+
+  profsal<- read.csv("Salaries.csv")
+  
+```
+###Tidy datasets are easy to manipulate, model and visualize, and have a specific structure:
+
+
+####Each variable is a column
+####Each observation is a row
+####Each type of observational unit is a table
+
+####So let's see if that's what we've got in our dataset
+
+First, let's get a summary of the dataset Professor Salaries (profsal).
+
+```{r}
+
+   summary(profsal)
+
+```
+
+####Now, let's play with it to get an idea of what we've got.
+
+Arranged by salary from lowest to highest.
+
+```{r}
+   profsal<- arrange(profsal, salary)
+   head(profsal)
+   tail(profsal)
+```
+
+Arranged by rank.
+
+```{r}
+   profsal<- arrange(profsal, rank)
+   head(profsal)
+   tail(profsal)
+    
+```
+
+Arranged by gender.
+
+```{r}
+   profsal<- arrange(profsal, sex)
+   head(profsal)
+   tail(profsal)
+```
+Arranged by sex and salary.
+
+```{r}
+   profsal<- arrange(profsal, sex, salary)
+   print(profsal)
+
+```
+
+Filtered by gender.
+
+```{r}
+   profsal.female<- filter(profsal, sex == "Female")
+   print(profsal.female)
+
+```
+
+####Let's analyze each variable to see if it should be split
+
+We have six variables, or columns, in the original dataset "profsal". They are Rank, Discipline, Yrs Since Phd, Yrs Since Service, Sex, and Salary.  Because there are three different ranks in the Rank column, it is useful to add a new column (variable) that identifies two of the ranks as "tenured". "Tenured" is Prof and Assoc Prof without Assist Prof. It's important to differentiate between tenured and non-tenured positions because each have different expectations.   
+
+```{r}
+   profsal.tenured<- mutate(profsal, tenured = rank != "AsstProf")
+   print(profsal.tenured)
+
+```
+
+Next, we added a second new variable called "gap", which is the number of years between phd and service. This new variable "gap" teases out previously hidden information.
+
+```{r}
+   profsal.phd.service.gap<- mutate(profsal, gap = yrs.since.phd - yrs.service)
+   print(profsal.phd.service.gap)
+
+```
+And lastly, we noticed that there are negative numbers in this new column named gap. Therefore we removed the rows that contain negative numbers, in case these numbers are due to inaccurate reporting.
+
+```{r}
+   profsal.no.neg.nums<- filter(profsal.phd.service.gap, gap > 0)
+   print(profsal.no.neg.nums)
+```
+
+The last three columns, Discipline, Sex, and Salary, we have left untouched.  These three untouched columns can be manipulted within themselves to give needed information.  For example, in the Sex column, Male and Female can be grouped seperately in one column.  This grouping within the column also holds true for the Discipline column.  As for the Salary column, salaries can be arranged in ascending or descending order. There's no need to split them.  
+#
+We have manipulated the dataset to get a general idea of what the data looks like.  Then, we made three new datasets each with one new variable.  Now, let's merge these three new datasets to make one (hopefully) tidy dataset.
+
+```{r}
+   profsal.tidy<-  merge(profsal.tenured, profsal.phd.service.gap, all = TRUE)
+   
+   print(profsal.tidy)
+   
+   profsal.tidy.final<- filter(profsal.tidy, gap > 0)
+   
+   print(profsal.tidy.final)
+   
+   
+   
+```
+
