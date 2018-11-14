@@ -1,0 +1,215 @@
+---
+title: "Data 101 Project - Exploratory Data Analysis"
+author: "Kate Berman"
+date: "10/31/2018"
+output:
+  html_document:
+    df_print: paged
+---
+
+###Begin Project 2:
+
+
+Load packages and read in the data file
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+
+
+  profsal<- read_csv("Salaries.csv")
+  
+```
+
+The gender paygap in the U.S. is the ratio of female to male average yearly earnings among full-time year around workers.
+
+The average woman's unadjusted annual salary is 80% of that of the average man's, according to Fontenot, K., Semega, J., & Kollar, M. (2018). Income
+and Poverty in the United States: 2017. Washington: U.S. Census Bureau.
+
+My question:  Do the female professors in this "Salaries.csv" dataset who have the same qualifications and years of experience as the male professors trend with the rest of the U.S. population in getting paid 80% of what their male counterparts make for the same job?
+
+Or will we be pleasantly surprised?
+
+But before we answer this question, let's re-run some code from Project 1 Data Cleaning. This Project 1 cleaned "Salaries.csv"(profsal) and made the data tidy.
+
+
+```{r}
+profsal.tenured<- mutate(profsal, tenured = rank != "AsstProf")
+profsal.phd.service.gap<- mutate(profsal, gap = yrs.since.phd - yrs.service)
+profsal.no.neg.nums<- filter(profsal.phd.service.gap, gap > 0)
+profsal.tidy<-  merge(profsal.tenured, profsal.phd.service.gap, all = TRUE)
+profsal.tidy.final<- filter(profsal.tidy, gap > 0)
+```
+
+Now that our data is tidy, let's graph it. 
+
+```{r}
+qplot(salary, data=profsal, geom="density")
+```
+
+How different would this density be if we look at males and females seperately?
+
+```{r}
+qplot(salary, data=profsal, geom="density", color=sex, linetype=sex)
+
+
+
+```
+
+The line for Male professors looks almost exactly the same as the density line for all professors.  But the density line for female professors is very different.
+
+With the female density line so different, how can the male density line not be affected when the two lines are combined?  My guess is that there are many more male professors than female professors in this dataset, so the data for female professors does not significantly affect the overall data.
+
+Let's see if that is in fact the case.
+Next I separate male and female and see.
+
+```{r}
+profsal.female<- filter(profsal, sex == "Female")
+str(profsal.female,1)
+profsal.male<- filter(profsal, sex == "Male")
+str(profsal.male,1)
+
+```
+Now we see that of the 397 total professors, there are 39 female professors to 358 male professors. In other words, female professors make up roughly 10% of the of the data, clearly not enough to have much influence on this density graph.
+
+But we also see something else. The female professors' line skews to the right, which means that the female professors are given a higher proportion of the lower salaries overall, and the male professor line skews to the left of the female line which shows that the male professors are given a higher proportion of higher salaries overall.  
+
+Interestingly, the female professor's line is bimodal.  There's a dip in the top of the female professors line that begins at about $75,000 and continues to about $85,000 before it goes up again. Meanwhile, the line for male professors continues to scale higher to a peak of $100,000.  Then, the male and female lines converge from about $115,000 to about $125,000.  After that, the male professors make more money proportionately than their female counterparts through to the top pay of $231,545.
+
+What would we learn if we separated this density plot as to rank?
+
+```{r}
+qplot(salary, data=profsal, geom="density", color=rank)
+
+```
+
+We see nothing too surprising here.  The lowest pay goes to the Assistant Professors. Assistant Professors overlap a bit with the Associate Professors, with about half of the Associate Professors making more than the Assistant Professors.  The full Professors overlap with both the Associate and Assistant Professors, but make by far the most overall.
+
+Now let's split it up and look at the density plot of just females, with a line for each rank.
+
+```{r}
+
+qplot(salary, data=profsal.female, geom="density", color=rank)
+```
+
+This plot looks very different. There's a lot going on here, but  notice that the x axis ends at $160,000. The x axis on the density graph for all professors went to roughly $230,000.  So, where the highest salaries are, on the right tail of the graph, there are no salaries for female professors. Roughly a third of this x axis is missing compared to the graph for all Professors. The top third of all salaries go to Male professors.
+
+Let's look at the Male Professor's density graph.  
+
+
+```{r}
+qplot(salary, data=profsal.male, geom="density", color=rank)
+```
+
+Not surprisingly, this graph looks almost exactly like the salary density graph for all the professors.  Again, because there are proportionately so few female professors in this dataset, the males will trend with the overall picture.
+
+
+So far we've only looked at salary as it relates to rank and sex. Other important factors as to how much a person is paid at any given job are education and years of service. 
+
+In this dataset, all the professors may not have the same education,  but all do have a Phd. And there are differences as to how many years they have worked at  the College (years of service).  Plus, there is one more variable - gap, which is the years between recieving a Phd and beginning to work at the University.
+
+Let's break this down.  First, we'll look at years of service.
+
+```{r}
+qplot(salary, yrs.service, data=profsal, color=sex, geom=c("point","smooth"),main="Regression on Salary and Years of Service")
+```
+
+As you can see, Male Professors in general have a bit more years of service overall (we break this down into rank a bit later in this Project) . Since this is a messy, hard to read graph, let's look at the data for years of service another way.
+
+```{r}
+qplot(salary, yrs.service, data=profsal, facets=.~sex)
+
+```
+It appears, from looking at the top of the above scatterplot, that Male Professors overall have more years of service.  But there's something interesting here. Take a look at the lower right quadrant of both graphs, at roughly 40 years of service and less, and $150,000 salary and more. That part of the graph for Female Professors is empty except for two points. Comparatively, that part of the Male Professor's graph is quite full with roughly 50 datapoints. These 50 Male Professors are being paid more for the same years of expereince as their Female couterparts. But is that statistically significant? That might be something to look into with Project 3.
+
+Now let's move on to the variable gap. Gap is defined as the time between getting a Phd and the start of service.
+
+```{r}
+qplot(gap, data=profsal.phd.service.gap, fill=sex, binwidth=2)
+```
+The Female Professors seem to have a gap between their Phd and service a bit more frequently at most gap years, but the binline follows the shape of the Male Professor's gap pretty closely with most Professors having a gap of about 8 years or less. There doesn't appear to be any significant difference in gap.
+
+
+The last variable we'll look at is "discipline".We don't know an awful lot about this variable. What we do know is that Professors who work in A are working in Theoretical Departments, and Professors who work in B are working in Applied Departments. Is there any difference in salary between the two departments? 
+
+
+```{r}
+qplot(salary, data=profsal, fill=discipline, binwidth=10000)
+
+```
+
+Looking at the higher end of the x axis, it looks like discipline A is paid better more frequently, except for what looks to be one outlier. Is this true? Let's look at it a different way.
+
+
+```{r}
+qplot(sex, salary, data=profsal, facets=.~discipline)
+```
+
+With this plot it looks like B might be paid better than A.  So which is it?  Let's try a box and whiskers plot for a more accurate answer.
+
+```{r}
+qplot(rank,salary, data=profsal, geom="boxplot",color=discipline)
+```
+
+Voilà! This box and whiskers plot shows the interquartile range for each rank by discipline. And in each rank, professors in discipline B make more money. If there are proportionally more Female Professors in discipline A than B, and we find that the Female Professors are in fact being paid less than their male couterparts, then that disparity between discipline A and B could be the reason why. So, are there proportionally more Female Professors in discipline A than B?
+
+```{r}
+qplot(sex, data=profsal, fill=discipline)
+```
+No.  About half as many Male and half as many Female Professors are in discipline B than A. It looks like the proportions are even.
+
+Now that we know that discipline is not a factor that affects pay disproportionally between Male and Female Professors, let's look elsewhere in the dataset for correlation leading to unequal pay.
+
+Using a box and whiskers plot was a very clear way to visualize differences in pay as it relates to rank, so let's apply it to the question at hand, which is: Do the Female Professors in this "Salaries.csv" dataset who have the same qualifications and years of experience as the male professors trend with the rest of the U.S. population in getting paid 80% of what their male counterparts make for the same job? 
+
+We have seen that it looks like the Male Professors have a bit more years of service than the Female Professors in this dataset. So, putting that aside for now, let's look at a box and whisker plot that shows Male and Female salaries by rank.
+
+```{r}
+qplot(rank,salary,data=profsal, geom="boxplot",color=sex)
+
+```
+
+Starting with the lowest rank, Assistant Professors, we see that the entire interquartile range for the Female professors fits almost entirely into the Male Professor's first and second quartile of their ICR.  This means that the Female Assistant Professors make at most the Male Assistant Professor's median income, except for two outliers. This is significant because future pay is based on past pay, and if a person starts out being paid less than others of the same rank, that pay disparity can follow them into the higher ranks.  Let's see if that happens here.
+
+Looking at the next highest rank, Associate Professors, we see the third quartile of the interquartile range for both the Male and Female Professors are the same.  However, the median as well as the whiskers on the Associate Male Professors' box stretch higher than the Females'.  Furthermore, the Associate Female Professors' box extends into a lower salary range, showing about a $10,000 difference in pay.  
+
+Lastly, we have full Professors. The median for Female Professors, like the other two ranks, is lower than the Male Professors' median.  Furthermore, the third quartile shows about a $12,000 advantage for Male Professors. But, at the lower end, the first quartile for Female Professors is a bit higher than the Male Professors.  Additionally, the Male Professors' boxplot has very long whiskers that extend from about $6,0000 to a bit more than $200,000. This lower reading for Male Professors' salary makes me believe that while all Professors of all ranks work through the school year, some full Professors work part-time, perhaps as professors emeritus.
+
+Furthermore, there is quite a long whisker on the top end of salary for full Male Professors.  What could this be due to?  My guess would be that there are a handful of men who are considered stars, either due to their years of experience, the mastery of their subject, or both. Interestingly, not one is a woman.
+
+We can see that Female Professors are paid less at all ranks.  Again, could that be because they were paid less from the very start as Assistant Professors?
+
+```{r}
+qplot(salary, yrs.service, data=profsal, facets=.~sex, color=rank)
+```
+Yes.  As we see in this scatterplot, all but three data points for the Female Assistant Professors are clustered at or near the $75,000 line, whereas salaries for Male Assistant Professors with the same years of experience are the same as the Females and higher, scaling to about $90,0000, even at zero years of service. Female Professors are paid less from the very beginning.
+
+Finally, disregarding years of service, are Male and Female Professors of all ranks paid equally?
+
+```{r}
+mean.profsal.female<-mean(profsal.female$salary)
+print(mean.profsal.female)
+
+mean.profsal.male<-mean(profsal.male$salary)
+print(mean.profsal.male)
+
+pay.gap<-mean.profsal.female/mean.profsal.male
+print(pay.gap)
+
+```
+No.  In the above code, I took the mean Female Professors' salary and divided it by the mean Male Professors' salary.  If pay were equal, the result would have been 1, meaning that proportionally, Male Professors and Female Professors salaries are the same.  But we see here that this is not the case.  Our result is 0.8775918, which means the Female Professor's salary is a portion of the Male Professor's salary - around 88%, which is better than the national average of 80%, but a significant difference of 12% persists.
+
+
+Did starting with lower pay cause these Female Professors to be paid less throughout their careers? Why were they paid less to start with? What about the difference in years of service at the other two ranks?
+
+Female Professors represent only 10% of the data.  If there were more Female Professors, would the pay disparity decrease?   And overall, if the Equal Rights Amendment passes (we only need ONE more state to ratify it!), giving the right to equal pay more teeth, would the Law of Higher Numbers dictate that women in general become equally paid as they participate in higher numbers in all areas of paid work?
+
+And lastly, why did the Female Professors not have as many years of service?  Could it be that the College was reluctant to hire Females 30, 40, 50 years ago?
+
+For answers to some of these questions, we turn to Project 3: Statistical Analysis.
+
+
+
+
+
