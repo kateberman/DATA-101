@@ -1,0 +1,231 @@
+---
+title: "Data 101 Project 3: Statistical Analysis"
+author: "Kate Berman"
+date: "12/6/2018"
+output: html_document
+---
+
+
+###Begin Project 3:
+
+Load packages and read in the data file
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+
+
+  profsal<- read_csv("Salaries.csv")
+```
+
+
+Tidy our data
+
+```{r}
+profsal.tenured<- mutate(profsal, tenured = rank != "AsstProf")
+profsal.phd.service.gap<- mutate(profsal, gap = yrs.since.phd - yrs.service)
+profsal.no.neg.nums<- filter(profsal.phd.service.gap, gap > 0)
+profsal.tidy<-  merge(profsal.tenured, profsal.phd.service.gap, all = TRUE)
+profsal.tidy.final<- filter(profsal.tidy, gap > 0)
+```
+
+
+Now that our packages are loaded, our data is read in, and our data is tidy, let's revisit Project 2 briefly.
+
+But before we begin, let me clearly define terms here.  There are three ranks in the category of Professor.  From lowest to highest rank, they are: Assistant Professor, Associate Professor, and Professor. 
+
+Project 2 asked the question: Are Male and Female Professors of the same rank and years of experience paid equally? 
+
+There were several challenges with this question. First, because women were generally not hired as Professors 30, 40, 50 years ago, the Female Professors do not have the same number of years of experience as the Male Professors. Consequently, differing years of experience, which has a direct bearing on pay, makes comparison difficult.
+
+Second, because women were paid less upon entering as Assistant Professors, they were also paid less as Associate Professors since future pay is based on past pay.  So we can't easily compare Associate Professor salaries and we can't easily compare Professor salaries. But since Assistant Professors arrive with the same degree (a PhD), and no experience at their new University, their experience can be considered similar. 
+
+Therefore, the most logical question to ask is: Is the difference in pay of new incoming Male and Female Assistant Professors significantly statistically different? 
+
+This is an important question because if Female Assistant Professors are paid statistically significantly less than their Male counterparts, then female professors can rarely be paid as much as the male professors because future pay is based on past pay. Therefore, we see the birth of the persistant pay gap.
+
+To test the statistical significance of the difference in pay between the Male and Female Assistant Professors, I will use the Unpaired Two-Sample T-test. This test is used to compare the means of two independent groups.
+
+My Null Hypothesis is that the Female and Male Assistant Professors are being paid equally, because that should be the status quo.
+
+Ho:m1=m2
+
+My Alternative Hypothesis is that Female Assistant Professors are being paid less than Male Assistant Professors (a one-tailed-test).
+
+Ha:m1<m2
+
+Now, let's look at the data visually:
+
+```{r}
+qplot(rank,salary,data=profsal, geom="boxplot",color=sex)
+```
+
+
+As you can see, it appears that Assistant Professors are paid the least overall and Female Assistant Professors less than the Male Assistant Professors.  But again, are they being paid less by a statistically significant amount?
+
+Now we perform the two-sample t-test comparing the means of two independent samples using our alternative hypothesis and unequal variance:
+
+
+```{r}
+profsal.female.AsstProf<- filter(profsal, rank == "AsstProf", sex == "Female")
+str(profsal.female.AsstProf)
+print(profsal.female.AsstProf)
+```
+
+```{r}
+femalesalary<-profsal.female.AsstProf$salary
+femalesalary
+```
+
+
+```{r}
+profsal.male.AsstProf<- filter(profsal, rank =="AsstProf", sex == "Male")
+str(profsal.male.AsstProf)
+print(profsal.male.AsstProf)
+```
+
+```{r}
+malesalary<-profsal.male.AsstProf$salary
+malesalary
+```
+
+
+```{r}
+are.they.equal <-t.test(femalesalary, malesalary, alternative = "less", var.equal = FALSE)
+are.they.equal
+```
+
+
+This test resulted in a confidence interval that is -Inf 2082.464. Why? Let's see if the distribution is normal enough to use the t-test by using the Shapiro-Wilkes Test
+
+```{r}
+shapiro.test(femalesalary)
+shapiro.test(malesalary)
+
+```
+
+If the p-value is less than .05, then we reject the null hypothesis that says that the male distribution is normal. For the females, the p-value is 0.188, so the distribution is normal.  But for the males, the p-value is 0.02964, which is less than .05, so the distribution is not normal. So the t-test cannot be used successfully on these two vectors.
+
+Let's use a quick plot to see what these two distributions look like.
+
+```{r}
+profsal.Asst<-filter(profsal, rank == "AsstProf")
+qplot(salary, data=profsal.Asst, geom="density", color=sex, linetype=sex)
+```
+
+Yes, it's clear by looking at the two distributions that the distribution for Male Assistant Professor salaries is not normal.  But there's also something else very ineteresting. It looks like the Male Assistant Professors are being paid $80,000 to $95,000 (the higher end of the pay scale) much more often than their female couterparts.  Visually, it looks to be over twice as often. 
+
+Let's look at this data in another way and see if my observation holds:
+
+
+```{r}
+qplot(salary, data=profsal.Asst, fill=sex, binwidth = 3000)
+
+```
+
+Yes, it looks like proportionally Male Assistant Professors are paid above $80,000 far more often than the Female Assistant Professors.
+
+Let's see if these two distributions are better than random (see how likely they are) by applying the Chi Square Test to each of them individually. I will set it up in two different ways to see if I get the same result.
+
+
+```{r}
+are.they.equally.common <- chisq.test(femalesalary, p = c(1/11, 1/11, 1/11, 1/11, 1/11, 1/11, 1/11, 1/11, 1/11, 1/11, 1/11))
+are.they.equally.common
+are.they.equally.common$expected
+```
+
+
+```{r}
+chisq <- chisq.test(femalesalary)
+chisq
+chisq.male <- chisq.test(malesalary)
+chisq.male
+chisq.male$expected
+```
+
+
+```{r}
+print(femalesalary)
+
+```
+
+```{r}
+mean(femalesalary)
+mean(malesalary)
+```
+
+
+Yes, I got the same result using both methods.  We see that the Chi Square Test measured how likely it would be for each salary to be so far from the mean.  The result is a p-value of < 2.2e-16, which is extremely small.  So, either this test is invalid, or this distribution is extremely unlikely.
+
+Since my data is clearly not normally distributed, I will next use the Wilcoxon Test to see if the means from each data set are significantly different. This test is a non-parametric alternative to the unpaired two-samples t-test, which can be used to compare two independent groups of samples. I set up this test in two different ways to see if I get the same result.
+ 
+
+```{r}
+are.they.different<-wilcox.test(femalesalary,malesalary, exact = FALSE)
+are.they.different
+
+```
+
+```{r}
+are.they.different.again<- wilcox.test(salary ~ sex, data = profsal.Asst, exact = FALSE)
+
+are.they.different.again
+
+```
+
+The result is the same in both instances, a p-value of 0.226. This p-value is much higher than the significance level of alpha = .05.  This means that the two means are not significantly different.
+
+For the sake of being complete (at the expense of being redundant), next I test whether the Female's mean is significantly less than the Male's mean
+
+```{r}
+are.they.different.less<-wilcox.test(femalesalary,malesalary, exact = FALSE, alternative = "less")
+
+are.they.different.less
+```
+
+The resulting p-value for this test is half of the previous test, 0.113, but still way above the alpha level of .05. This confirms that the Female's mean salary is not significantly lower than the Male's mean salary.
+
+Lastly, I test whether the Female's mean salary is significantly higher than the Male's mean salary.  I know, of course, that this couldn't be the case, but I ask the question because I'm curious how high the p-value will be.
+
+```{r}
+are.they.different.greater<-wilcox.test(femalesalary,malesalary, exact = FALSE, alternative = "greater")
+
+are.they.different.greater
+```
+
+The Female's mean salary is not significanlty higher, and in actuality, is lower than the Male's mean salary.
+
+###Summary
+
+And there you have it.  The Female and Male Assistant Professor's salaries are not normally distributed as shown by the Shapiro-Wilkes Test and the Chi-squared test for given probabilities.  And the mean salary of Female Asisstant Professors is not statistically significantly different than that of Male Assistant Professors.
+
+However, while the Female Assistant Professors in this dataset may not make statistically significantly less than their male couterparts, they still make about 4% less,(as shown in the code below) and that percentage increases to 12% (as seen in Project 2) as they become Assosiate Professor, and finally, Professor.
+
+```{r}
+mfs<- mean(femalesalary)
+print(mfs)
+mms<- mean(malesalary)
+print(mms)
+diff.salary<-mfs/mms
+print(diff.salary)
+```
+
+So, how can we, as a society, move toward equal pay?  One way, as I mentioned in Project 2, is to pass the Equal Rights Amendment to the Constitution.  I leave you with this information below which covers why we need this amendment, and what it will do for us:
+
+"Without the Equal Rights Amendment there is no clear guarantee that rights protected by the Constitution are accorded to all citizens irrespective of sex.  Currently, there is a differential legal standing which assumes that men hold rights, but women must still prove that they have rights.  The ERA would eliminate that different legal standing and, consequently, shift the burden of proof to the party accused of discrimination.  Without a constitutional amendment clarifying women’s legal standing, women will continue to have to wage extended, costly and challenging political and legal battles for equal rights.
+
+The Equal Rights Amendment could make a difference in the following areas:
+
+Equal Pay – The gender wage gap – the 21.7 percent spread between men’s and women’s median annual earnings as full-time, year round workers — has been painfully slow in closing: at the current glacial pace, women’s and men’s pay will not be equal until 2058. It may take even longer for the gap to close for African American women (36 percent) and Latinas (31.9 percent) as compared to white men’s  median weekly earnings.[4]  The ERA could help move pay equity legislation that has been stuck in Congress for several years and provide a more effective tool for sex -based employment discrimination litigation. It may also exert a positive influence in helping to raise pay in the numerous occupational categories where wages are low simply because these occupations are traditionally and primarily held by women, such as retail clerks, home health aides, nursing aides, waitresses, and many others .
+
+Title IX – An ERA could enhance and solidify Title IX protections that promote equal opportunity in academics and athletics programs which suffer from inadequate implementation and have been weakened under various administrations.  It could also have an impact on unequal educational resources in sex-segregated in public schools and athletic programs, stereotyped barriers to career and technical education, sexual harassment and campus sexual assault."
+
+(https://now.org/resource/is-the-equal-rights-amendment-relevant-in-the-21st-century)
+
+
+
+
+
+
+
