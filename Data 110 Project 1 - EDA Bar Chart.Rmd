@@ -1,0 +1,349 @@
+---
+title: "Data 110 Project 1 - EDA"
+author: Kate Berman
+Date: 3/1/2019
+---
+
+Begin Project 1:
+
+Load packages and read in the data file
+
+```{r}
+library(tidyverse)
+library(dplyr)
+
+df <- read_csv("StudentsPerformance-csv.csv")
+```
+
+```{r}
+qplot(math_score, data = df, geom ="density", color = test_preparation_course, linetype = test_preparation_course)
+```
+```{r}
+qplot(math_score, data = df, geom ="density", color = parental_level_of_education, linetype = parental_level_of_education)
+```
+
+```{r}
+qplot(reading_score, data = df, geom ="density", color = test_preparation_course, linetype = test_preparation_course)
+```
+
+```{r}
+qplot(reading_score, data = df, geom ="density", color = parental_level_of_education, linetype = parental_level_of_education)
+```
+```{r}
+qplot(writing_score, data = df, geom ="density", color = test_preparation_course, linetype = test_preparation_course)
+```
+
+```{r}
+qplot(writing_score, data = df, geom ="density", color = parental_level_of_education, linetype = parental_level_of_education)
+```
+
+```{r}
+qplot(math_score, data = df, geom ="density", color = lunch, linetype = lunch)
+```
+
+```{r}
+qplot(reading_score, data = df, geom ="density", color = lunch, linetype = lunch)
+```
+
+```{r}
+qplot(writing_score, data = df, geom ="density", color = lunch, linetype = lunch)
+```
+
+```{r}
+qplot(math_score, data = df, geom ="density", color = gender, linetype = gender)
+```
+
+```{r}
+qplot(reading_score, data = df, geom ="density", color = gender, linetype = gender)
+```
+
+```{r}
+qplot(writing_score, data = df, geom ="density", color = gender, linetype = gender)
+```
+```{r}
+qplot(math_score, data = df, geom ="density", color = race_ethnicity, linetype = race_ethnicity)
+```
+```{r}
+qplot(reading_score, data = df, geom ="density", color = race_ethnicity, linetype = race_ethnicity)
+```
+
+```{r}
+qplot(writing_score, data = df, geom ="density", color = race_ethnicity, linetype = race_ethnicity)
+```
+
+```{r}
+qplot(math_score, data = df, geom ="density", color = lunch, linetype = lunch, facets = .~ gender)
+```
+
+```{r}
+qplot(reading_score, data = df, geom ="density", color = lunch, linetype = lunch, facets = .~ gender)
+```
+```{r}
+qplot(writing_score, data = df, geom ="density", color = lunch, linetype = lunch, facets = .~ gender)
+```
+```{r}
+qplot(math_score, data = df, geom ="density", color = race_ethnicity, linetype = race_ethnicity, facets = .~ gender)
+```
+
+```{r}
+qplot(reading_score, data = df, geom ="density", color = race_ethnicity, linetype = race_ethnicity, facets = .~ gender)
+```
+```{r}
+qplot(writing_score, data = df, geom ="density", color = race_ethnicity, linetype = race_ethnicity, facets = .~ gender)
+```
+```{r}
+qplot(math_score, data = df, geom ="density", color = parental_level_of_education, linetype = parental_level_of_education, facets = .~ gender)
+```
+```{r}
+qplot(reading_score, data = df, geom ="density", color = parental_level_of_education, linetype = parental_level_of_education, facets = .~ gender)
+```
+```{r}
+qplot(writing_score, data = df, geom ="density", color = parental_level_of_education, linetype = parental_level_of_education, facets = .~ gender)
+```
+
+```{r}
+qplot(math_score, data = df, geom ="density", color = test_preparation_course, linetype = test_preparation_course, facets = .~ gender)
+```
+
+```{r}
+qplot(reading_score, data = df, geom ="density", color = test_preparation_course, linetype = test_preparation_course, facets = .~ gender)
+```
+
+```{r}
+qplot(writing_score, data = df, geom ="density", color = test_preparation_course, linetype = test_preparation_course, facets = .~ gender)
+```
+
+```{r}
+df %>%
+        group_by(gender, parental_level_of_education) %>%
+        tally() 
+```
+
+```{r}
+df %>%
+        group_by(gender, lunch) %>%
+        tally() 
+```
+
+```{r}
+df %>%
+        group_by(gender, test_preparation_course) %>%
+        tally() 
+```
+
+```{r}
+df %>%
+        group_by(gender, math_score) %>%
+        tally() 
+```
+
+```{r}
+df %>%
+        group_by(gender, parental_level_of_education, math_score) %>%
+        tally() 
+```
+```{r}
+qplot(math_score, reading_score, data =df, color = gender, geom =c("point","smooth"))
+```
+
+```{r}
+qplot(writing_score, reading_score, data =df, color = gender, geom =c("point","smooth"))
+```
+
+```{r}
+qplot(math_score, writing_score, data =df, color = gender, geom =c("point","smooth"))
+```
+```{r}
+qplot(y = math_score, data =df, color = lunch)
+```
+
+```{r}
+qplot(math_score, data = df, facets = gender ~.,binwidth = 2)
+```
+
+```{r}
+df.filter.parental_level_of_education <- filter(df, parental_level_of_education == "master's degree")
+str(df.filter.masters)
+```
+
+```{r}
+boxplot <- ggplot(df.filter.parental_level_of_education,aes(gender, math_score))
+boxplot + geom_boxplot()
+```
+
+```{r}
+ggplot(df, aes(x= parental_level_of_education, y=math_score, fill=gender)) + 
+    geom_boxplot()
+```
+```{r}
+#Create Empty Data Frame
+
+math_delta <- read.csv(text = "Education, Math_Delta" , colClasses = c("character", "numeric"))
+str(math_delta)
+```
+
+```{r}
+#Some High School
+
+med_score_math_male_sh <- df %>% filter(gender == "male") %>% filter (parental_level_of_education == "some high school") %>% summarize(median(math_score))
+
+print(med_score_math_male_sh)
+
+med_score_math_female_sh <- df %>% filter(gender == "female") %>% filter (parental_level_of_education == "some high school") %>% summarize(median(math_score))
+
+print(med_score_math_female_sh)
+
+
+difference.sh <- med_score_math_male_sh - med_score_math_female_sh
+
+print(difference.sh)
+
+math_delta[1,1] <- "some high school"
+math_delta[1,2] <- difference.sh
+str(math_delta)
+head(math_delta)
+```
+
+```{r}
+#High School
+
+med_score_math_male_hs <- df %>% filter(gender == "male") %>% filter (parental_level_of_education == "high school") %>% summarize(median(math_score))
+
+print(med_score_math_male_hs)
+
+med_score_math_female_hs <- df %>% filter(gender == "female") %>% filter (parental_level_of_education == "high school") %>% summarize(median(math_score))
+
+print(med_score_math_female_hs)
+
+
+difference.hs <- med_score_math_male_hs - med_score_math_female_hs
+
+print(difference.hs)
+
+math_delta[2,1] <- "high school"
+math_delta[2,2] <- difference.hs
+str(math_delta)
+head(math_delta)
+```
+
+```{r}
+#Some College
+
+med_score_math_male_sc <- df %>% filter(gender == "male") %>% filter (parental_level_of_education == "some college") %>% summarize(median(math_score))
+
+print(med_score_math_male_sc)
+
+med_score_math_female_sc <- df %>% filter(gender == "female") %>% filter (parental_level_of_education == "some college") %>% summarize(median(math_score))
+
+print(med_score_math_female_sc)
+
+
+difference.sc <- med_score_math_male_sc - med_score_math_female_sc
+
+print(difference.sc)
+
+math_delta[3,1] <- "some college"
+math_delta[3,2] <- difference.sc
+str(math_delta)
+head(math_delta)
+```
+
+```{r}
+#Associate's Degree
+
+med_score_math_male_ad <- df %>% filter(gender == "male") %>% filter (parental_level_of_education == "associate's degree") %>% summarize(median(math_score))
+
+print(med_score_math_male_ad)
+
+med_score_math_female_ad <- df %>% filter(gender == "female") %>% filter (parental_level_of_education == "associate's degree") %>% summarize(median(math_score))
+
+print(med_score_math_female_ad)
+
+
+difference.ad <- med_score_math_male_ad - med_score_math_female_ad
+
+print(difference.ad)
+
+math_delta[4,1] <- "associate's degree"
+math_delta[4,2] <- difference.ad
+str(math_delta)
+head(math_delta)
+```
+
+```{r}
+#Bachelor's Degree
+
+med_score_math_male_bd <- df %>% filter(gender == "male") %>% filter (parental_level_of_education == "bachelor's degree") %>% summarize(median(math_score))
+
+print(med_score_math_male_bd)
+
+med_score_math_female_bd <- df %>% filter(gender == "female") %>% filter (parental_level_of_education == "bachelor's degree") %>% summarize(median(math_score))
+
+print(med_score_math_female_bd)
+
+
+difference.bd <- med_score_math_male_bd - med_score_math_female_bd
+
+print(difference.bd)
+
+math_delta[5,1] <- "bachelor's degree"
+math_delta[5,2] <- difference.bd
+str(math_delta)
+head(math_delta)
+```
+
+```{r}
+#Master's Degree
+
+med_score_math_male_md <- df %>% filter(gender == "male") %>% filter (parental_level_of_education == "master's degree") %>% summarize(median(math_score))
+
+print(med_score_math_male_md)
+
+med_score_math_female_md <- df %>% filter(gender == "female") %>% filter (parental_level_of_education == "master's degree") %>% summarize(median(math_score))
+
+print(med_score_math_female_md)
+
+
+difference.md <- med_score_math_male_md - med_score_math_female_md
+
+print(difference.md)
+
+math_delta[6,1] <- "master's degree"
+math_delta[6,2] <- difference.md
+str(math_delta)
+head(math_delta)
+```
+
+
+```{r}
+math_difference <- ggplot(math_delta, aes(x=Education, y= Math_Delta, fill= Education ))+ labs (y = "Math Score Difference",title = "Deviation Between Median Math Scores: Girls vs Boys") + geom_col( ) +
+  scale_fill_brewer(palette = "Set2")
+
+math_difference
+
+
+```
+
+
+Student Performance in Math Exam by Gender and Parents’ Level of Education
+
+
+     Ever since I began teaching, first in public and private schools for 5 years and then in homeschooling my two girls for the following ten, I’ve been interested in education.  Specifically what works, what doesn’t work, and why.  Furthermore, because both my children are female, and one of them is particularly good at math, I’ve been closely following the opportunities, or lack thereof, for women in STEM fields, which have been dominated by men since the beginning of time.
+
+     When I saw the this “StudentsPerformance” Kaggle dataset (https://www.kaggle.com/spscientist/students-performance-in-exams), I saw the perfect opportunity to find out more about the differences between genders in education.  While the author of this dataset writes that this data is fictional, it supports the findings of an impressive Stanford University study published in June of last year (cepa.stanford.edu/seda/download?nid=2016&destination=node/2021#testscore-2-1).  For a well written, brief over-view on the data, here’s an article in The Atlantic: https://www.theatlantic.com/education/archive/2018/06/why-are-rich-white-girls-struggling-in-math/563066/
+
+     But first, let’s get into the data.   This set has 1,000 observations (students) with 8 variables.  The variables are: gender, race, parental level of education, whether the child received free or reduced lunch, whether the student finished a test prep course, math score, reading score, writing score.  Most of the variables  are categorical leaving only the math, reading, and writing scores as quantitate discrete values.  This lack of categories with numbers limited how much statistical information I could extract from the data.  
+
+    My hypothesis before graphing the data was that the students who did better than their peers completed the test prep course, did not have a free or reduced lunch, and had parents with a master’s degree.  I made these assumptions based on all the studies that have shown that the greatest predictor of student performance is parental income (For example, here’s an article about one such study: https://www.theatlantic.com/business/archive/2012/02/occupy-kindergarten-the-rich-poor-divide-starts-with-education/252914/)
+
+     I started my analysis of the data by cleaning it up a bit in OpenRefine to get the spaces out of the column names, then by creating a series of 32 qplots in ggplot2 looking at all the possible correlations between variables.  None of the plots were particularly surprising except one.  The curve in the density plot I made correlating math score with parental level of education was a smooth bell shape for all levels of education except master’s degree.  The line for master’s degree was bimodal - there was a dip in the middle.  Yes, the math scores were generally higher than other parental levels of education, but what was with the dip?
+
+     There must be another variable that is influencing the math score for students with a parent who has a master’s degree.  Looking back at all the qplots I generated, it was clear taking a prep course, not having a free or reduced lunch, race, all made a difference, but the change was uniform.  What I mean by uniform is that the entire curve moved to the right as each of these variables were invoked.  For example, when students completed a test prep course, the whole curve moved to the right; the course helped all students uniformly.
+
+    What seemed to make the most difference when looking at math score and parental master’s degree, was whether the student was a male or female.  When I faceted the plot, splitting male and female and using math score and parental level of education, I saw clearly that females of parents with a master’s degree did dramatically worse than the males in the same category.  Really? What is that all about? (Quick answer: We don’t know, but there are theories, and yes, this is really a thing).
+
+     Next, I wanted to make what I discovered in the dataset clear to see.  The qplot I made served me well to uncover an interesting correlation, but it was noisy and hard to read.  What I really wanted was to show was how dramatic the difference was between the males and females.  So, I made a bar chart of the difference between male and female median math scores in all the parental education levels. 
+
+     This simple bar chart took me a crazy amount of time to create.  I first had to make an empty data frame, and then feed it the 6 numbers I needed (the median differences).  This would be easy if I were good at for loops, but my coding ability is limited - at least for now.  I’m happy with the result, but I would’ve loved to have been able to produce this same graph with the added feature of having the data for each bar pop up as you scroll over it.  That would be awesome.
+
+
